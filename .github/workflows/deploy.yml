@@ -1,0 +1,34 @@
+name: Deploy Static Website using Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted   
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Stop and remove old container (if exists)
+        run: |
+          docker stop static-site || true
+          docker rm static-site || true
+
+      - name: Remove old image (optional)
+        run: |
+          docker rmi static-web || true
+
+      - name: Build Docker image
+        run: |
+          docker build -t static-web .
+
+      - name: Run Docker container
+        run: |
+          docker run -d \
+          -p 8080:80 \
+          --name static-site \
+          static-web
