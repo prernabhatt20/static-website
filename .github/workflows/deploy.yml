@@ -1,4 +1,4 @@
-name: Deploy Static Website using Docker
+name: Deploy Static Website using Docker Compose
 
 on:
   push:
@@ -10,36 +10,22 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout source code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Stop and remove old container if exists
+      - name: Stop existing containers (if any)
         shell: powershell
         run: |
-          $container = docker ps -a --format "{{.Names}}" | Select-String "^static-site$"
-          if ($container) {
-            docker stop static-site
-            docker rm static-site
-          } else {
-            Write-Host "Container static-site does not exist. Skipping stop/remove."
+          if (Test-Path docker-compose.yml) {
+            docker-compose down
           }
 
-      - name: Remove old image if exists
+      - name: Build and deploy using Docker Compose
         shell: powershell
         run: |
-          $image = docker images -q static-web
-          if ($image) {
-            docker rmi static-web
-          } else {
-            Write-Host "Image static-web does not exist. Skipping remove."
-          }
+          docker-compose up -d --build
 
-      - name: Build Docker image
+      - name: Verify running containers
         shell: powershell
         run: |
-          docker build -t static-web .
-
-      - name: Run Docker container
-        shell: powershell
-        run: |
-          docker run -d -p 8080:80 --name static-site static-web
+          docker ps
