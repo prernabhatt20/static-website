@@ -13,16 +13,26 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Stop and remove old container (if exists)
+      - name: Stop and remove old container if exists
         shell: powershell
         run: |
-          docker stop static-site 2>$null
-          docker rm static-site 2>$null
+          $container = docker ps -a --format "{{.Names}}" | Select-String "^static-site$"
+          if ($container) {
+            docker stop static-site
+            docker rm static-site
+          } else {
+            Write-Host "Container static-site does not exist. Skipping stop/remove."
+          }
 
-      - name: Remove old image (optional)
+      - name: Remove old image if exists
         shell: powershell
         run: |
-          docker rmi static-web 2>$null
+          $image = docker images -q static-web
+          if ($image) {
+            docker rmi static-web
+          } else {
+            Write-Host "Image static-web does not exist. Skipping remove."
+          }
 
       - name: Build Docker image
         shell: powershell
