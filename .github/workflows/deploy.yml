@@ -7,28 +7,29 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted   
+    runs-on: self-hosted
 
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
 
       - name: Stop and remove old container (if exists)
+        shell: powershell
         run: |
-          docker stop static-site || true
-          docker rm static-site || true
+          docker stop static-site 2>$null
+          docker rm static-site 2>$null
 
       - name: Remove old image (optional)
+        shell: powershell
         run: |
-          docker rmi static-web || true
+          docker rmi static-web 2>$null
 
       - name: Build Docker image
+        shell: powershell
         run: |
           docker build -t static-web .
 
       - name: Run Docker container
+        shell: powershell
         run: |
-          docker run -d \
-          -p 8080:80 \
-          --name static-site \
-          static-web
+          docker run -d -p 8080:80 --name static-site static-web
